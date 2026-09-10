@@ -63,7 +63,7 @@ function MarkerLabel({
 
   return (
     <g
-      className="event-marker"
+      className={`event-marker ${selected ? "selected" : "quiet"}`}
       role="button"
       tabIndex={0}
       aria-label={`${shortLabel}: ${event.title}`}
@@ -72,9 +72,17 @@ function MarkerLabel({
       onMouseEnter={() => onHover(event)}
       onMouseLeave={() => onHover(null)}
     >
-      <circle cx={x} cy={y + 8} r={selected ? 11 : 10} fill={selected ? eventColors[event.type] : "white"} stroke={eventColors[event.type]} strokeWidth="1.5" />
+      {selected && <circle cx={x} cy={y + 8} r="16" fill={eventColors[event.type]} opacity="0.12" />}
+      <circle
+        cx={x}
+        cy={y + 8}
+        r={selected ? 11 : 8}
+        fill={selected ? eventColors[event.type] : "#f8fafc"}
+        stroke={selected ? eventColors[event.type] : "#aeb8c5"}
+        strokeWidth={selected ? 2 : 1.25}
+      />
       <foreignObject x={x - 6} y={y + 2} width="12" height="12" pointerEvents="none">
-        <Icon size={12} color={selected ? "white" : eventColors[event.type]} strokeWidth={2.2} />
+        <Icon size={12} color={selected ? "white" : "#748196"} strokeWidth={2.2} />
       </foreignObject>
       <text
         x={placeLabelBefore ? x - 15 : x + 15}
@@ -94,13 +102,11 @@ export function ConversionChart({
   events,
   selectedEvent,
   onSelect,
-  compact = false,
 }: {
   data: ChartPoint[];
   events: ChangeEvent[];
   selectedEvent?: ChangeEvent | null;
   onSelect?: (event: ChangeEvent) => void;
-  compact?: boolean;
 }) {
   const [hoveredEvent, setHoveredEvent] = useState<ChangeEvent | null>(null);
   const grouped = useMemo(() => {
@@ -113,8 +119,8 @@ export function ConversionChart({
   }, [events]);
 
   return (
-    <div className={`chart-wrap ${compact ? "compact-chart" : ""}`}>
-      {hoveredEvent && !compact && (
+    <div className="chart-wrap">
+      {hoveredEvent && (
         <div className="marker-tooltip" role="status">
           <strong>{eventLabels[hoveredEvent.type]} {hoveredEvent.type === "paywall" ? "published" : "changed"}</strong>
           <span>{hoveredEvent.title}</span>
@@ -122,15 +128,15 @@ export function ConversionChart({
         </div>
       )}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={compact ? { top: 20, right: 12, bottom: 0, left: -16 } : { top: 44, right: 22, bottom: 4, left: -12 }}>
+        <LineChart data={data} margin={{ top: 44, right: 22, bottom: 4, left: -12 }}>
           <CartesianGrid stroke="#e8ecf2" vertical horizontal />
           <XAxis
             dataKey="date"
             tickFormatter={formatTick}
             axisLine={{ stroke: "#dfe4eb" }}
             tickLine={false}
-            tick={{ fill: "#718096", fontSize: compact ? 10 : 11 }}
-            minTickGap={compact ? 45 : 60}
+            tick={{ fill: "#718096", fontSize: 11 }}
+            minTickGap={60}
             dy={9}
           />
           <YAxis
@@ -139,20 +145,21 @@ export function ConversionChart({
             tickFormatter={(value) => `${value}%`}
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#718096", fontSize: compact ? 10 : 11 }}
+            tick={{ fill: "#718096", fontSize: 11 }}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }} />
-          {selectedEvent && !compact && (
+          {selectedEvent && (
             <ReferenceArea x1="2024-08-31" x2="2024-09-06" fill="#6952f5" fillOpacity={0.035} />
           )}
           {grouped.map(({ date, events: dateEvents }) => (
             <ReferenceLine
               key={date}
               x={date}
-              stroke={eventColors[dateEvents[0].type]}
-              strokeOpacity={0.45}
+              stroke={selectedEvent && eventDate(selectedEvent) === date ? eventColors[dateEvents[0].type] : "#aeb8c5"}
+              strokeOpacity={selectedEvent && eventDate(selectedEvent) === date ? 0.7 : 0.35}
+              strokeWidth={selectedEvent && eventDate(selectedEvent) === date ? 1.5 : 1}
               strokeDasharray="3 3"
-              label={compact ? undefined : (props) => (
+              label={(props) => (
                 <MarkerLabel
                   {...props}
                   event={dateEvents[0]}
@@ -168,7 +175,7 @@ export function ConversionChart({
             type="monotone"
             dataKey="conversionRate"
             stroke="#684bff"
-            strokeWidth={compact ? 1.8 : 2}
+            strokeWidth={2}
             dot={false}
             activeDot={{ r: 4, fill: "white", stroke: "#684bff", strokeWidth: 2 }}
             isAnimationActive={false}

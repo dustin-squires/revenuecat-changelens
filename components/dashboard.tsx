@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, CalendarDays, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CalendarDays, ChevronDown, Menu, Sparkles, X } from "lucide-react";
 import { chartData, changeEvents, impactMetrics, primaryEventId } from "@/data/demo-data";
 import type { ChangeEvent } from "@/lib/types";
 import { Sidebar } from "./sidebar";
@@ -53,7 +53,10 @@ export function Dashboard() {
         <div className="page-content">
           <header className="page-heading">
             <div className="breadcrumb"><span>Charts</span><span>›</span><span>Conversion Rate</span></div>
-            <h1>Conversion Rate <ChevronDown size={19} /></h1>
+            <div className="title-row">
+              <h1>Conversion Rate <ChevronDown size={19} /></h1>
+              <span className="feature-badge"><Sparkles size={13} />ChangeLens <em>Beta</em></span>
+            </div>
             <p>See how your app converts visitors to paying customers, and understand what might be driving changes.</p>
           </header>
 

@@ -10,7 +10,6 @@ import {
   Layers3,
   Link2,
   Settings,
-  Sparkles,
   Users,
 } from "lucide-react";
 
@@ -48,11 +47,6 @@ export function Sidebar() {
       </nav>
 
       <div className="sidebar-spacer" />
-
-      <div className="changelens-callout">
-        <div className="callout-title"><Sparkles size={17} /><strong>ChangeLens</strong><span>Beta</span></div>
-        <p>See config changes beside performance</p>
-      </div>
 
       <div className="utility-nav">
         <button className="nav-item" type="button"><FileText size={17} />Docs</button>

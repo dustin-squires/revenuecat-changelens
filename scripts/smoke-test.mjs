@@ -54,13 +54,18 @@ try {
   await paywallRow[1].click();
   await page.waitForFunction(() => document.body.textContent?.includes("2 monetization changes"));
 
-  const viewChanges = await page.$(".secondary-button");
-  await viewChanges.click();
-  await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent === "Changes");
-
-  const overviewTab = await page.$('[role="tab"]');
-  await overviewTab.click();
-  await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent === "Overview");
+  const simplifiedDrawer = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll(".drawer-card h3")].map((heading) => heading.textContent);
+    return {
+      hasTabs: Boolean(document.querySelector(".drawer-tabs")),
+      hasMiniChart: Boolean(document.querySelector(".compact-chart")),
+      changesBeforeImpact: cards.indexOf("Key changes") < cards.indexOf("Observed impact"),
+      comparisonLabel: document.body.textContent?.includes("7 days before vs. 7 days after") ?? false,
+    };
+  });
+  if (simplifiedDrawer.hasTabs || simplifiedDrawer.hasMiniChart || !simplifiedDrawer.changesBeforeImpact || !simplifiedDrawer.comparisonLabel) {
+    throw new Error(`Unexpected simplified drawer state: ${JSON.stringify(simplifiedDrawer)}`);
+  }
 
   await page.screenshot({ path: "/tmp/changelens-hydrated.png", fullPage: true });
 
@@ -98,7 +103,7 @@ try {
   }
   await mobilePage.screenshot({ path: "/tmp/changelens-mobile.png", fullPage: true });
 
-  console.log(JSON.stringify({ initial, filtered, selectedTitle, mobile }, null, 2));
+  console.log(JSON.stringify({ initial, filtered, selectedTitle, simplifiedDrawer, mobile }, null, 2));
 } finally {
   await browser.close();
   server?.kill();
