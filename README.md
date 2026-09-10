@@ -2,9 +2,7 @@
 
 A small product prototype exploring how RevenueCat could surface monetization configuration changes directly inside Charts.
 
-[Run locally](#running-locally) · [2-minute walkthrough](#demo)
-
-![ChangeLens showing configuration changes alongside a conversion chart](docs/changelens-overview.png)
+![ChangeLens demo](revenuecat.gif)
 
 When a subscription metric moves, one of the first questions is often: **what changed?**
 
