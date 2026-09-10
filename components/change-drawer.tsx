@@ -14,7 +14,7 @@ function SemanticDiff({ event }: { event: ChangeEvent }) {
       {event.diffs.map((diff) => (
         <div className="diff-row" key={`${event.id}-${diff.label}`}>
           <span>{diff.label}</span>
-          <span>{diff.before ? <mark className="before-value">{diff.before}</mark> : <span className="empty-value">—</span>}</span>
+          <span>{diff.before ? <mark className="before-value">{diff.before}</mark> : <span className="empty-value">-</span>}</span>
           <span className="arrow">→</span>
           <span>{diff.after ? <mark className="after-value">{diff.after}</mark> : <span className="removed-value">Removed</span>}</span>
         </div>

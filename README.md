@@ -4,6 +4,8 @@ A small product prototype exploring how RevenueCat could surface monetization co
 
 ![ChangeLens demo](revenuecat.gif)
 
+[Live demo](https://revenuecat-changelens.onrender.com/)
+
 When a subscription metric moves, one of the first questions is often: **what changed?**
 
 RevenueCat already has both sides of that investigation. Charts captures business outcomes, while configuration and audit history capture changes to paywalls, offerings, experiments, and products. ChangeLens explores bringing those two contexts together.
@@ -59,37 +61,3 @@ The main interaction lives in [`components/conversion-chart.tsx`](components/con
 - AI-generated explanations or a live Rico integration
 - Production analytics infrastructure
 - A complete RevenueCat dashboard recreation
-
-## Running locally
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000). If that port is already occupied, run `pnpm dev -- --port 3100`.
-
-Create the production static export with:
-
-```bash
-pnpm build
-```
-
-The generated site is written to `out/`. Run the production interaction checks with:
-
-```bash
-pnpm smoke
-```
-
-The smoke test uses the system Firefox browser and starts a temporary local server for the exported build.
-
-## Deploying to Render
-
-The repository includes a Render Blueprint for a static deployment. It pins Node.js, enables pnpm through Corepack, installs from the lockfile, builds the Next.js static export, and publishes `out/`.
-
-1. Push the latest commit to GitHub.
-2. In Render, choose **New → Blueprint** and connect this repository.
-3. Confirm the `revenuecat-changelens` Static Site from `render.yaml`.
-4. After the first deploy, open the assigned `onrender.com` URL in a private browser window and verify marker selection, filters, drawer dismissal, and a direct page refresh.
-
-No secrets or application runtime variables are required.

@@ -22,7 +22,7 @@ export const changeEvents: ChangeEvent[] = [
     initials: "JL",
     summary: "Started a 50/50 experiment on annual package pricing for new users.",
     diffs: [
-      { label: "Variant", after: "Annual — $39.99" },
+      { label: "Variant", after: "Annual - $39.99" },
       { label: "Audience", after: "New customers" },
     ],
   },
