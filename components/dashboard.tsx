@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, CalendarDays, ChevronDown, Menu, Sparkles, X } from "lucide-react";
-import { chartData, changeEvents, impactMetrics, primaryEventId } from "@/data/demo-data";
+import { chartData, changeEvents, impactsByEventId, primaryEventId } from "@/data/demo-data";
 import type { ChangeEvent } from "@/lib/types";
 import { Sidebar } from "./sidebar";
 import { ChangeFilters, type ChangeFilter } from "./change-filters";
@@ -55,7 +55,7 @@ export function Dashboard() {
             <div className="breadcrumb"><span>Charts</span><span>›</span><span>Conversion Rate</span></div>
             <div className="title-row">
               <h1>Conversion Rate <ChevronDown size={19} /></h1>
-              <span className="feature-badge"><Sparkles size={13} />ChangeLens <em>Beta</em></span>
+              <span className="feature-badge"><Sparkles size={12} />Changes <em>Beta</em></span>
             </div>
             <p>See how your app converts visitors to paying customers, and understand what might be driving changes.</p>
           </header>
@@ -83,7 +83,12 @@ export function Dashboard() {
         </div>
       </main>
 
-      <ChangeDrawer open={drawerOpen} event={selectedEvent} impacts={impactMetrics} onClose={() => setDrawerOpen(false)} />
+      <ChangeDrawer
+        open={drawerOpen}
+        event={selectedEvent}
+        impacts={selectedEvent ? impactsByEventId[selectedEvent.id] : []}
+        onClose={() => setDrawerOpen(false)}
+      />
     </div>
   );
 }

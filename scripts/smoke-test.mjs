@@ -4,6 +4,14 @@ import { spawn } from "node:child_process";
 const siteUrl = "http://127.0.0.1:4173";
 let server;
 
+async function clickMarker(page, index) {
+  await page.evaluate((markerIndex) => {
+    const marker = document.querySelectorAll(".event-marker")[markerIndex];
+    if (!marker) throw new Error(`Marker ${markerIndex} was not found`);
+    marker.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  }, index);
+}
+
 try {
   const response = await fetch(siteUrl);
   if (!response.ok) throw new Error("Local server returned an error");
@@ -46,13 +54,31 @@ try {
     throw new Error(`Unexpected initial UI state: ${JSON.stringify(initial)}`);
   }
 
-  const markers = await page.$$(".event-marker");
-  await markers[0].click();
-  await page.waitForFunction(() => document.querySelector(".drawer-header h2")?.textContent?.includes("Experiment"));
+  const markerResults = [];
+  for (let index = 0; index < initial.markers; index += 1) {
+    await clickMarker(page, index);
+    await page.waitForFunction(
+      (selectedIndex) => document.querySelectorAll(".event-marker")[selectedIndex]?.classList.contains("selected"),
+      {},
+      index,
+    );
+    markerResults.push(await page.evaluate(() => ({
+      title: document.querySelector(".drawer-header h2")?.textContent,
+      conversion: document.querySelector('[data-impact-metric="Conversion to paying"] strong')?.textContent,
+      windowX: Math.round(document.querySelector(".comparison-window")?.getBoundingClientRect().x ?? -1),
+    })));
+  }
+  if (new Set(markerResults.map((result) => result.conversion)).size !== initial.markers) {
+    throw new Error(`Markers reused impact data: ${JSON.stringify(markerResults)}`);
+  }
+  if (new Set(markerResults.map((result) => result.windowX)).size !== initial.markers) {
+    throw new Error(`Comparison window did not move: ${JSON.stringify(markerResults)}`);
+  }
 
-  const paywallRow = await page.$$("button.table-row");
-  await paywallRow[1].click();
+  await clickMarker(page, 1);
   await page.waitForFunction(() => document.body.textContent?.includes("2 monetization changes"));
+  const timestamp = await page.$eval(".drawer-header p", (element) => element.textContent);
+  if (timestamp !== "Sep 3, 2024, 11:42 AM") throw new Error(`Unexpected timestamp: ${timestamp}`);
 
   const simplifiedDrawer = await page.evaluate(() => {
     const cards = [...document.querySelectorAll(".drawer-card h3")].map((heading) => heading.textContent);
@@ -67,7 +93,16 @@ try {
     throw new Error(`Unexpected simplified drawer state: ${JSON.stringify(simplifiedDrawer)}`);
   }
 
-  await page.screenshot({ path: "/tmp/changelens-hydrated.png", fullPage: true });
+  await page.keyboard.press("Escape");
+  await page.waitForFunction(() => !document.querySelector(".detail-drawer"));
+  await clickMarker(page, 1);
+  await page.waitForSelector(".detail-drawer");
+  await page.click(".close-button");
+  await page.waitForFunction(() => !document.querySelector(".detail-drawer"));
+  await clickMarker(page, 1);
+  await page.waitForSelector(".detail-drawer");
+
+  await page.screenshot({ path: "docs/changelens-overview.png", fullPage: true });
 
   const offeringFilter = await page.$$(".filter-pill");
   await offeringFilter[2].click();
@@ -103,7 +138,7 @@ try {
   }
   await mobilePage.screenshot({ path: "/tmp/changelens-mobile.png", fullPage: true });
 
-  console.log(JSON.stringify({ initial, filtered, selectedTitle, simplifiedDrawer, mobile }, null, 2));
+  console.log(JSON.stringify({ initial, markerResults, timestamp, filtered, selectedTitle, simplifiedDrawer, mobile }, null, 2));
 } finally {
   await browser.close();
   server?.kill();

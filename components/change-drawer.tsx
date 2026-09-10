@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { ArrowDown, ArrowUp, ExternalLink, Sparkles, X } from "lucide-react";
 import type { ChangeEvent, MetricImpact } from "@/lib/types";
 import { changeEvents } from "@/data/demo-data";
-import { eventLabels, eventsNear, formatEventDate } from "@/lib/change-utils";
+import { eventsNear, formatEventDate } from "@/lib/change-utils";
 import { EventTypeIcon } from "./change-table";
 
 function SemanticDiff({ event }: { event: ChangeEvent }) {
@@ -27,7 +27,7 @@ function ImpactCards({ metrics }: { metrics: MetricImpact[] }) {
   return (
     <div className="impact-grid">
       {metrics.map((metric) => (
-        <div className="impact-card" key={metric.label}>
+        <div className="impact-card" data-impact-metric={metric.label} key={metric.label}>
           <span>{metric.label}</span>
           <strong>{metric.before} <small>→</small> {metric.after}</strong>
           <div className={`metric-change ${metric.direction}`}>
@@ -68,7 +68,7 @@ export function ChangeDrawer({
     <aside className="detail-drawer" aria-label="Change details">
       <header className="drawer-header">
         <EventTypeIcon type={event.type} />
-        <div><h2>{eventLabels[event.type]} {event.type === "paywall" ? "published" : "changed"}</h2><p>{formatEventDate(event.timestamp)}</p></div>
+        <div><h2>{event.action}</h2><p>{formatEventDate(event.timestamp)}</p></div>
         <button className="icon-button close-button" type="button" onClick={onClose} aria-label="Close details"><X size={19} /></button>
       </header>
 
@@ -82,7 +82,7 @@ export function ChangeDrawer({
             <div className="nearby-event" key={item.id}>
               <EventTypeIcon type={item.type} />
               <div>
-                <strong>{item.type === "paywall" ? "Paywall published" : item.type === "offering" ? "Offering updated" : item.title}</strong>
+                <strong>{item.action}</strong>
                 <span>{item.title} · {formatEventDate(item.timestamp, false)}</span>
                 <small><span className="mini-avatar">{item.initials}</span>{item.actor}</small>
                 <p>{item.summary}</p>

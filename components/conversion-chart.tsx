@@ -29,6 +29,12 @@ function formatTick(value: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`));
 }
 
+function shiftDate(date: string, days: number) {
+  const shifted = new Date(`${date}T12:00:00Z`);
+  shifted.setUTCDate(shifted.getUTCDate() + days);
+  return shifted.toISOString().slice(0, 10);
+}
+
 function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartPoint; value: number }> }) {
   if (!active || !payload?.length) return null;
   const point = payload[0];
@@ -117,12 +123,18 @@ export function ConversionChart({
     });
     return [...byDate.entries()].map(([date, dateEvents]) => ({ date, events: dateEvents }));
   }, [events]);
+  const comparisonWindow = selectedEvent
+    ? {
+        start: shiftDate(eventDate(selectedEvent), -7),
+        end: shiftDate(eventDate(selectedEvent), 7),
+      }
+    : null;
 
   return (
     <div className="chart-wrap">
       {hoveredEvent && (
         <div className="marker-tooltip" role="status">
-          <strong>{eventLabels[hoveredEvent.type]} {hoveredEvent.type === "paywall" ? "published" : "changed"}</strong>
+          <strong>{hoveredEvent.action}</strong>
           <span>{hoveredEvent.title}</span>
           <small>{formatEventDate(hoveredEvent.timestamp)}</small>
         </div>
@@ -148,8 +160,14 @@ export function ConversionChart({
             tick={{ fill: "#718096", fontSize: 11 }}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }} />
-          {selectedEvent && (
-            <ReferenceArea x1="2024-08-31" x2="2024-09-06" fill="#6952f5" fillOpacity={0.035} />
+          {comparisonWindow && (
+            <ReferenceArea
+              className="comparison-window"
+              x1={comparisonWindow.start}
+              x2={comparisonWindow.end}
+              fill="#6952f5"
+              fillOpacity={0.035}
+            />
           )}
           {grouped.map(({ date, events: dateEvents }) => (
             <ReferenceLine

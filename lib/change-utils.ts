@@ -21,5 +21,6 @@ export function formatEventDate(timestamp: string, includeYear = true) {
     ...(includeYear ? { year: "numeric" } : {}),
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "America/New_York",
   }).format(new Date(timestamp));
 }

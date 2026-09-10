@@ -10,6 +10,7 @@ export type ChangeEvent = {
   id: string;
   timestamp: string;
   type: ChangeEventType;
+  action: string;
   title: string;
   actor: string;
   initials: string;
