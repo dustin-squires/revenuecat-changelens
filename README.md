@@ -84,3 +84,14 @@ pnpm smoke
 ```
 
 The smoke test uses the system Firefox browser and starts a temporary local server for the exported build.
+
+## Deploying to Render
+
+The repository includes a Render Blueprint for a static deployment. It pins Node.js, enables pnpm through Corepack, installs from the lockfile, builds the Next.js static export, and publishes `out/`.
+
+1. Push the latest commit to GitHub.
+2. In Render, choose **New → Blueprint** and connect this repository.
+3. Confirm the `revenuecat-changelens` Static Site from `render.yaml`.
+4. After the first deploy, open the assigned `onrender.com` URL in a private browser window and verify marker selection, filters, drawer dismissal, and a direct page refresh.
+
+No secrets or application runtime variables are required.

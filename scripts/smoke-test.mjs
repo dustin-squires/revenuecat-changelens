@@ -102,7 +102,7 @@ try {
   await clickMarker(page, 1);
   await page.waitForSelector(".detail-drawer");
 
-  await page.screenshot({ path: "docs/changelens-overview.png", fullPage: true });
+  await page.screenshot({ path: "/tmp/changelens-hydrated.png", fullPage: true });
 
   const offeringFilter = await page.$$(".filter-pill");
   await offeringFilter[2].click();
