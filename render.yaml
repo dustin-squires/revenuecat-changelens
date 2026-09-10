@@ -2,7 +2,7 @@ services:
   - type: web
     name: revenuecat-changelens
     runtime: static
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    buildCommand: npx --yes pnpm@10.15.1 install --frozen-lockfile && npx --yes pnpm@10.15.1 build
     staticPublishPath: ./out
     autoDeployTrigger: commit
     previews:
