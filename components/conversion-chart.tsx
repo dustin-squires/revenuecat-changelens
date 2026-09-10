@@ -1,0 +1,180 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Box, FlaskConical, Layers3, Tag } from "lucide-react";
+import type { ChangeEvent, ChangeEventType, ChartPoint } from "@/lib/types";
+import { eventDate, eventLabels, formatEventDate } from "@/lib/change-utils";
+
+const eventColors: Record<ChangeEventType, string> = {
+  paywall: "#ef4444",
+  offering: "#16a765",
+  experiment: "#3b82f6",
+  release: "#64748b",
+};
+
+const eventIcons = { paywall: Layers3, offering: Tag, experiment: FlaskConical, release: Box };
+
+function formatTick(value: string) {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`));
+}
+
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartPoint; value: number }> }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0];
+  return (
+    <div className="chart-tooltip">
+      <span>{formatTick(point.payload.date)}</span>
+      <strong>{Number(point.value).toFixed(2)}%</strong>
+    </div>
+  );
+}
+
+function MarkerLabel({
+  viewBox,
+  event,
+  count,
+  selected,
+  onSelect,
+  onHover,
+}: {
+  viewBox?: { x?: number; y?: number };
+  event: ChangeEvent;
+  count: number;
+  selected: boolean;
+  onSelect: () => void;
+  onHover: (event: ChangeEvent | null) => void;
+}) {
+  const x = viewBox?.x ?? 0;
+  const y = (viewBox?.y ?? 0) + 2;
+  const Icon = eventIcons[event.type];
+  const shortLabel = count > 1 ? `${count} changes` : eventLabels[event.type];
+  const placeLabelBefore = count > 1;
+
+  return (
+    <g
+      className="event-marker"
+      role="button"
+      tabIndex={0}
+      aria-label={`${shortLabel}: ${event.title}`}
+      onClick={onSelect}
+      onKeyDown={(keyEvent) => { if (keyEvent.key === "Enter" || keyEvent.key === " ") onSelect(); }}
+      onMouseEnter={() => onHover(event)}
+      onMouseLeave={() => onHover(null)}
+    >
+      <circle cx={x} cy={y + 8} r={selected ? 11 : 10} fill={selected ? eventColors[event.type] : "white"} stroke={eventColors[event.type]} strokeWidth="1.5" />
+      <foreignObject x={x - 6} y={y + 2} width="12" height="12" pointerEvents="none">
+        <Icon size={12} color={selected ? "white" : eventColors[event.type]} strokeWidth={2.2} />
+      </foreignObject>
+      <text
+        x={placeLabelBefore ? x - 15 : x + 15}
+        y={y + 12}
+        textAnchor={placeLabelBefore ? "end" : "start"}
+        className="event-marker-label"
+      >
+        {shortLabel}
+      </text>
+      <circle cx={x} cy={y + 8} r="19" fill="transparent" />
+    </g>
+  );
+}
+
+export function ConversionChart({
+  data,
+  events,
+  selectedEvent,
+  onSelect,
+  compact = false,
+}: {
+  data: ChartPoint[];
+  events: ChangeEvent[];
+  selectedEvent?: ChangeEvent | null;
+  onSelect?: (event: ChangeEvent) => void;
+  compact?: boolean;
+}) {
+  const [hoveredEvent, setHoveredEvent] = useState<ChangeEvent | null>(null);
+  const grouped = useMemo(() => {
+    const byDate = new Map<string, ChangeEvent[]>();
+    events.forEach((event) => {
+      const date = eventDate(event);
+      byDate.set(date, [...(byDate.get(date) ?? []), event]);
+    });
+    return [...byDate.entries()].map(([date, dateEvents]) => ({ date, events: dateEvents }));
+  }, [events]);
+
+  return (
+    <div className={`chart-wrap ${compact ? "compact-chart" : ""}`}>
+      {hoveredEvent && !compact && (
+        <div className="marker-tooltip" role="status">
+          <strong>{eventLabels[hoveredEvent.type]} {hoveredEvent.type === "paywall" ? "published" : "changed"}</strong>
+          <span>{hoveredEvent.title}</span>
+          <small>{formatEventDate(hoveredEvent.timestamp)}</small>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={compact ? { top: 20, right: 12, bottom: 0, left: -16 } : { top: 44, right: 22, bottom: 4, left: -12 }}>
+          <CartesianGrid stroke="#e8ecf2" vertical horizontal />
+          <XAxis
+            dataKey="date"
+            tickFormatter={formatTick}
+            axisLine={{ stroke: "#dfe4eb" }}
+            tickLine={false}
+            tick={{ fill: "#718096", fontSize: compact ? 10 : 11 }}
+            minTickGap={compact ? 45 : 60}
+            dy={9}
+          />
+          <YAxis
+            domain={[0, 8]}
+            ticks={[0, 2, 4, 6, 8]}
+            tickFormatter={(value) => `${value}%`}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#718096", fontSize: compact ? 10 : 11 }}
+          />
+          <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#cbd5e1", strokeDasharray: "3 3" }} />
+          {selectedEvent && !compact && (
+            <ReferenceArea x1="2024-08-31" x2="2024-09-06" fill="#6952f5" fillOpacity={0.035} />
+          )}
+          {grouped.map(({ date, events: dateEvents }) => (
+            <ReferenceLine
+              key={date}
+              x={date}
+              stroke={eventColors[dateEvents[0].type]}
+              strokeOpacity={0.45}
+              strokeDasharray="3 3"
+              label={compact ? undefined : (props) => (
+                <MarkerLabel
+                  {...props}
+                  event={dateEvents[0]}
+                  count={dateEvents.length}
+                  selected={Boolean(selectedEvent && eventDate(selectedEvent) === date)}
+                  onSelect={() => onSelect?.(dateEvents[0])}
+                  onHover={setHoveredEvent}
+                />
+              )}
+            />
+          ))}
+          <Line
+            type="monotone"
+            dataKey="conversionRate"
+            stroke="#684bff"
+            strokeWidth={compact ? 1.8 : 2}
+            dot={false}
+            activeDot={{ r: 4, fill: "white", stroke: "#684bff", strokeWidth: 2 }}
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
